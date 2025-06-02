@@ -1,0 +1,116 @@
+import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+
+type Poll = {
+  id: number;
+  title: string;
+  options: string[];
+};
+
+export default function PollPage() {
+  const { id } = useParams<{ id: string }>();
+  const [poll, setPoll] = useState<Poll | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [votedOption, setVotedOption] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch(`/polls/${id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setPoll(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error fetching poll:", err);
+        setLoading(false);
+      });
+  }, [id]);
+
+  const handleVote = (option: string) => {
+    fetch(`/polls/${id}/vote`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ option }),
+    })
+      .then((res) => {
+        if (res.ok) {
+          setVotedOption(option);
+        } else {
+          alert("Помилка при голосуванні");
+        }
+      })
+      .catch((err) => {
+        console.error("Vote error:", err);
+      });
+  };
+
+  if (loading) return <p>Завантаження...</p>;
+  if (!poll) return <p>Голосування не знайдено</p>;
+
+  return (
+    <div style={{ padding: "20px" }}>
+      <h1 style={{ marginBottom: "20px" }}>{poll.title}</h1>
+      {poll.options.map((opt) => (
+        <button
+          key={opt}
+          onClick={() => handleVote(opt)}
+          disabled={votedOption !== null}
+          style={{
+            display: "block",
+            marginBottom: "10px",
+            padding: "10px 20px",
+            fontSize: "16px",
+            cursor: votedOption ? "not-allowed" : "pointer",
+            backgroundColor: votedOption === opt ? "#4caf50" : "#f0f0f0",
+          }}
+        >
+          {opt}
+        </button>
+      ))}
+      {votedOption && (
+        <p style={{ marginTop: "20px", color: "green" }}>
+          Ви проголосували за: <strong>{votedOption}</strong>
+        </p>
+      )}
+    </div>
+  );
+}
+
+
+Додати маршрут у App.tsx
+tsx
+Копировать
+Редактировать
+// src/App.tsx
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import HomePage from "./pages/HomePage";
+import PollPage from "./pages/PollPage";
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/polls/:id" element={<PollPage />} />
+      </Routes>
+    </Router>
+  );
+}
+
+export default App;
+
+Додати посилання на голосування в таблиці (HomePage.tsx)
+Заміни назву на посилання:
+
+tsx
+Копировать
+Редактировать
+import { Link } from "react-router-dom";
+// ...
+<td>
+  <Link to={`/polls/${poll.id}`} style={{ color: "blue", textDecoration: "underline" }}>
+    {poll.title}
+  </Link>
+</td>
