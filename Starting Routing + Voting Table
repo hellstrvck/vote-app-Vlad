@@ -1,0 +1,64 @@
+import { useEffect, useState } from "react";
+
+type Poll = {
+  id: number;
+  title: string;
+  created_at: string;
+  options: string[];
+};
+
+export default function HomePage() {
+  const [polls, setPolls] = useState<Poll[]>([]);
+
+  useEffect(() => {
+    fetch("/polls")
+      .then((res) => res.json())
+      .then(setPolls)
+      .catch((err) => console.error("Error fetching polls:", err));
+  }, []);
+
+  return (
+    <div style={{ padding: "20px" }}>
+      <h1>Голосування</h1>
+      <table border={1} cellPadding={10} style={{ marginTop: "20px", width: "100%", borderCollapse: "collapse" }}>
+        <thead>
+          <tr>
+            <th>Назва</th>
+            <th>Дата створення</th>
+            <th>Кількість варіантів</th>
+          </tr>
+        </thead>
+        <tbody>
+          {polls.map((poll) => (
+            <tr key={poll.id}>
+              <td>{poll.title}</td>
+              <td>{new Date(poll.created_at).toLocaleDateString()}</td>
+              <td>{poll.options.length}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+
+Налаштування роутера в App.tsx
+tsx
+Копировать
+Редактировать
+// src/App.tsx
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import HomePage from "./pages/HomePage";
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+      </Routes>
+    </Router>
+  );
+}
+
+export default App;
